@@ -15,10 +15,25 @@ trait ObserverTrait
         $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, [$this, 'recordOriginalAttributes']);
         $this->on(ActiveRecord::EVENT_BEFORE_INSERT, [$this, 'recordOriginalAttributes']);
     }
-    public function isDirty($attribute)
+    public function isDirty($attribute = null)
     {
+        if ($attribute === null) {
+            foreach ($this->originalAttributes as $key => $oldValue) {
+                if ($oldValue !== $this->$key) {
+                    return true;
+                }
+            }
+            return false;
+        }
         $oldValue = isset($this->originalAttributes[$attribute]) ? $this->originalAttributes[$attribute] : null;
         return $oldValue !== $this->$attribute;
+    }
+    public function getOriginal($attribute = null, $default = null)
+    {
+        if ($attribute === null) {
+            return $this->originalAttributes;
+        }
+        return isset($this->originalAttributes[$attribute]) ? $this->originalAttributes[$attribute] : $default;
     }
 
     public function recordOriginalAttributes()
