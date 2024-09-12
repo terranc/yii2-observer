@@ -6,6 +6,7 @@ use yii\db\ActiveRecord;
 
 trait ObserverTrait
 {
+    protected static $methodCache = [];
     public $originalAttributes = [];
 
     public function init()
@@ -34,13 +35,24 @@ trait ObserverTrait
             'deleting' => self::EVENT_BEFORE_DELETE,
             'deleted' => self::EVENT_AFTER_DELETE,
         ];
-        $observer = new $observerClass();
-        $reflection = new \ReflectionClass($observerClass);
+        // Can be used with yiithings/yii2-softdelete
+        if (method_exists(get_called_class(), 'softDelete')) {
+            $eventsMap['deleting'] = 'beforeSoftDelete';
+            $eventsMap['deleted'] = 'afterSoftDelete';
+            $eventsMap['forceDeleted'] = 'afterForceDelete';
+            $eventsMap['restoring'] = 'beforeRestore';
+            $eventsMap['restored'] = 'afterRestore';
+        }
+        // Check if there's cache, if not then get and cache the public methods of the class
+        if (!isset(self::$methodCache[$observerClass])) {
+            self::$methodCache[$observerClass] = get_class_methods($observerClass);
+        }
 
-        foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            if (array_key_exists($method->name, $eventsMap)) {
-                Event::on(self::class, $eventsMap[$method->name], function ($event) use ($observer, $method) {
-                    $observer->{$method->name}($event->sender);
+        $observer = new $observerClass();
+        foreach (self::$methodCache[$observerClass] as $method) {
+            if (array_key_exists($method, $eventsMap)) {
+                Event::on(self::class, $eventsMap[$method], function ($event) use ($observer, $method) {
+                    $observer->{$method}($event->sender);
                 });
             }
         }
