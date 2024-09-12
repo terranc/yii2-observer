@@ -1,5 +1,6 @@
 {
     "name": "terranc/yii2-observer",
+    "type": "library",
     "description": "This is my package yii2-observer",
     "keywords": [
         "terranc",
