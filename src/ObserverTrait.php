@@ -6,14 +6,32 @@ use yii\db\ActiveRecord;
 
 trait ObserverTrait
 {
+
     protected static $methodCache = [];
     protected $original = [];
+
+    private static $EVENT_SAVING = 'saving';
+    private static $EVENT_SAVED = 'saved';
 
     public function init()
     {
         parent::init();
         $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, [$this, 'syncOriginal']);
         $this->on(ActiveRecord::EVENT_BEFORE_INSERT, [$this, 'syncOriginal']);
+
+        $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, function ($event) {
+            $this->trigger(self::$EVENT_SAVING);
+        });
+        $this->on(ActiveRecord::EVENT_BEFORE_INSERT, function ($event) {
+            $this->trigger(self::$EVENT_SAVING);
+        });
+
+        $this->on(ActiveRecord::EVENT_AFTER_UPDATE, function ($event) {
+            $this->trigger(self::$EVENT_SAVED);
+        });
+        $this->on(ActiveRecord::EVENT_AFTER_INSERT, function ($event) {
+            $this->trigger(self::$EVENT_SAVED);
+        });
     }
     public function isDirty($attribute = null)
     {
@@ -49,6 +67,8 @@ trait ObserverTrait
             'updated' => self::EVENT_AFTER_UPDATE,
             'deleting' => self::EVENT_BEFORE_DELETE,
             'deleted' => self::EVENT_AFTER_DELETE,
+            'saving' => self::$EVENT_SAVING,
+            'saved' => self::$EVENT_SAVED,
         ];
         // Can be used with yiithings/yii2-softdelete
         $instance = new static;
