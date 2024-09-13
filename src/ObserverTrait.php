@@ -7,38 +7,38 @@ use yii\db\ActiveRecord;
 trait ObserverTrait
 {
     protected static $methodCache = [];
-    public $originalAttributes = [];
+    protected $original = [];
 
     public function init()
     {
         parent::init();
-        $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, [$this, 'recordOriginalAttributes']);
-        $this->on(ActiveRecord::EVENT_BEFORE_INSERT, [$this, 'recordOriginalAttributes']);
+        $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, [$this, 'syncOriginal']);
+        $this->on(ActiveRecord::EVENT_BEFORE_INSERT, [$this, 'syncOriginal']);
     }
     public function isDirty($attribute = null)
     {
         if ($attribute === null) {
-            foreach ($this->originalAttributes as $key => $oldValue) {
+            foreach ($this->original as $key => $oldValue) {
                 if ($oldValue !== $this->$key) {
                     return true;
                 }
             }
             return false;
         }
-        $oldValue = isset($this->originalAttributes[$attribute]) ? $this->originalAttributes[$attribute] : null;
+        $oldValue = isset($this->original[$attribute]) ? $this->original[$attribute] : null;
         return $oldValue !== $this->$attribute;
     }
     public function getOriginal($attribute = null, $default = null)
     {
         if ($attribute === null) {
-            return $this->originalAttributes;
+            return $this->original;
         }
-        return isset($this->originalAttributes[$attribute]) ? $this->originalAttributes[$attribute] : $default;
+        return isset($this->original[$attribute]) ? $this->original[$attribute] : $default;
     }
 
-    public function recordOriginalAttributes()
+    public function syncOriginal()
     {
-        $this->originalAttributes = $this->getOldAttributes();
+        $this->original = $this->getOldAttributes();
     }
     public static function observe($observerClass)
     {
