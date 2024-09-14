@@ -1,0 +1,12 @@
+- name: Packagist Update
+
+uses: mnavarrocarter/packagist-update@v1.0.0
+with:
+  # The packagist domain to call.
+  domain: https://github.com/terranc/yii2-observer
+  # Your packagist username
+  username: terranc
+  # Your packagist api token
+  api_token: 503329bc0d09073b83525e06c5ab3c76b21b3bdf
+
+          
