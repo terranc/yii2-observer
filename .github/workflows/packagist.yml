@@ -1,5 +1,17 @@
-- name: Packagist Update
-uses: mnavarrocarter/packagist-update@v1.0.0
-with:
-  username: "terranc"
-  api_token: ${{ secrets.packagist_token }}
+name: Update Packagist
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Packagist Update
+        uses: mnavarrocarter/packagist-update@v1.0.0
+        with:
+          username: "terranc"
+          api_token: ${{ secrets.packagist_token }}
