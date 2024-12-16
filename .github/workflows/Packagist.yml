@@ -1,0 +1,16 @@
+name: Update Packagist
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Packagist Update
+        uses: mnavarrocarter/packagist-update@v1.0.0
+        with:
+          api_token: ${{ secrets.PACKAGIST_TOKEN }}
