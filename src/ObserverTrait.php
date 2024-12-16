@@ -16,13 +16,13 @@ trait ObserverTrait
     public function init()
     {
         parent::init();
-        $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, [$this, 'syncOriginal']);
-        $this->on(ActiveRecord::EVENT_BEFORE_INSERT, [$this, 'syncOriginal']);
-
         $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, function ($event) {
+            $this->syncOriginal();
             $this->trigger(self::$EVENT_SAVING);
         });
+
         $this->on(ActiveRecord::EVENT_BEFORE_INSERT, function ($event) {
+            $this->syncOriginal();
             $this->trigger(self::$EVENT_SAVING);
         });
 
