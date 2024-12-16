@@ -71,8 +71,7 @@ trait ObserverTrait
             'saved' => self::$EVENT_SAVED,
         ];
         // Can be used with yiithings/yii2-softdelete
-        $instance = new static;
-        if (method_exists($instance, 'softDelete')) {
+        if (method_exists(static::class, 'softDelete')) {
             $eventsMap['deleting'] = 'beforeSoftDelete';
             $eventsMap['deleted'] = 'afterSoftDelete';
             $eventsMap['forceDeleted'] = 'afterForceDelete';
