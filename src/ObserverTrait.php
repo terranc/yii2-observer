@@ -84,9 +84,14 @@ trait ObserverTrait
         }
 
         $name = static::class;
-        $observer = new $observerClass();
+        $observer = null;
+
         foreach (self::$methodCache[$observerClass] as $method) {
             if (array_key_exists($method, $eventsMap)) {
+                // 只在找到第一个有效的监听方法时实例化
+                if ($observer === null) {
+                    $observer = new $observerClass();
+                }
                 Event::on($name, $eventsMap[$method], function ($event) use ($observer, $method) {
                     $observer->{$method}($event->sender);
                 });
