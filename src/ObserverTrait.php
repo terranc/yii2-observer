@@ -9,6 +9,8 @@ trait ObserverTrait
 
     protected static $methodCache = [];
     protected $original = [];
+    /** @var bool 是否使用全等比較檢測字段變動，默認為弱比較 */
+    protected static $observerStrictDirtyComparison = false;
 
     private static $EVENT_SAVING = 'saving';
     private static $EVENT_SAVED = 'saved';
@@ -37,14 +39,14 @@ trait ObserverTrait
     {
         if ($attribute === null) {
             foreach ($this->original as $key => $oldValue) {
-                if ($oldValue !== $this->$key) {
+                if ($this->observerValueHasChanged($oldValue, $this->$key)) {
                     return true;
                 }
             }
             return false;
         }
         $oldValue = isset($this->original[$attribute]) ? $this->original[$attribute] : null;
-        return $oldValue !== $this->$attribute;
+        return $this->observerValueHasChanged($oldValue, $this->$attribute);
     }
     public function getOriginal($attribute = null, $default = null)
     {
@@ -58,8 +60,53 @@ trait ObserverTrait
     {
         $this->original = $this->getOldAttributes();
     }
-    public static function observe($observerClass)
+    /**
+     * @param mixed $oldValue 原始值
+     * @param mixed $newValue 新值
+     * @return bool 返回是否视为变化
+     */
+    protected function observerValueHasChanged($oldValue, $newValue)
     {
+        if (static::$observerStrictDirtyComparison) {
+            return $oldValue !== $newValue;
+        }
+
+        if ($this->observerNumericEquals($oldValue, $newValue)) {
+            return false;
+        }
+
+        return $oldValue !== $newValue;
+    }
+    /**
+     * @param mixed $oldValue 原始值
+     * @param mixed $newValue 新值
+     * @return bool 返回数值上是否相等
+     */
+    protected function observerNumericEquals($oldValue, $newValue)
+    {
+        if (!is_numeric($oldValue) || !is_numeric($newValue)) {
+            return false;
+        }
+
+        return $this->observerNormalizeNumeric($oldValue) == $this->observerNormalizeNumeric($newValue);
+    }
+
+    /**
+     * @param mixed $value 原始值
+     * @return float|int 归一化后的数值
+     */
+    protected function observerNormalizeNumeric($value)
+    {
+        return $value + 0;
+    }
+    /**
+     * @param string $observerClass 監聽類名
+     * @param bool $useStrictComparison 是否啟用全等比較，默認使用弱比較
+     */
+    public static function observe($observerClass, $useStrictComparison = false)
+    {
+        static::$observerStrictDirtyComparison = (bool)$useStrictComparison;
+
         $eventsMap = [
             'creating' => self::EVENT_BEFORE_INSERT,
             'created' => self::EVENT_AFTER_INSERT,
